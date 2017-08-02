@@ -2401,7 +2401,7 @@ def run_binlog_stream():
                     old_binlog = _oldest_binlog_from_backup()
                     if not old_binlog: old_binlog = xb_first_binlog
                     _purge_binlogs_to(old_binlog)
-                    _say("Maintaing binary logs from %s" % old_binlog)
+                    _say("Backing up binlogs starting with %s" % old_binlog)
                     sleeps = 0
 
 
@@ -3264,9 +3264,26 @@ if __name__ == "__main__":
         elif xb_opt_command == XB_CMD_LIST:
             run_xb_list()
         elif xb_opt_command == XB_CMD_PREP:
+            if xb_opt_restore_dir is None:
+                if xb_opt_work_dir:
+                     _warn('No prepare directory was specified, please specify it with ',
+                     '--restore-dir parameter or restore_dir configuration option. ',
+                     'Using default workdir: %s' %xb_opt_work_dir)
+                     xb_opt_restore_dir = xb_opt_work_dir
+                else: _die('No prepare and work directory was specified.')
+            if xb_opt_restore_backup is None:
+                _die("You have not specified which backup to prepare. Please specify it with ",
+                "-r <BACKUP_NAME> or --restore-backup=<BACKUP_NAME>")
             run_xb_restore_set()
         elif xb_opt_command == XB_CMD_APPL:
-            run_xb_apply_last()
+            if xb_opt_restore_dir is None:
+                if xb_opt_work_dir:
+                     _warn('No prepare directory was specified, please specify it with ',
+                     '--restore-dir parameter or restore_dir configuration option. ',
+                     'Using default workdir: %s' %xb_opt_work_dir)
+                     xb_opt_restore_dir = xb_opt_work_dir
+            xb_opt_restore_backup = xb_last_backup
+            run_xb_restore_set()
         elif xb_opt_command == XB_CMD_PRUNE:
             prune_full_incr()
             prune_weekly()
