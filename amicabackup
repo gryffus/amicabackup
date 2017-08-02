@@ -2147,9 +2147,6 @@ def run_xb_restore_set(prepare_path=None, finalize=True):
     if not os.path.isdir(xb_opt_restore_dir):
         _die("The specified prepare directory is not a valid directory")
 
-    if xb_opt_restore_backup is None:
-        xb_opt_restore_backup = xb_last_backup
-
     backup_is = XB_CMD_FULL
     the_backup = None
     the_backup_path = ''
