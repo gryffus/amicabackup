@@ -117,11 +117,11 @@ XB_CMD_INCR = 'incr'
 XB_CMD_FULL = 'full'
 XB_CMD_LIST = 'list'
 XB_CMD_STAT = 'status'
-XB_CMD_PREP = 'restore-set'
-XB_CMD_APPL = 'apply-last'
+XB_CMD_PREP = 'prepare'
+XB_CMD_APPL = 'prepare-last'
 XB_CMD_PRUNE = 'prune'
 XB_CMD_META = 'meta'
-XB_CMD_BINLOGS = 'binlog-stream'
+XB_CMD_BINLOGS = 'bin'
 XB_CMD_WIPE = 'wipeout'
 XB_TAG_FILE = 'xtrabackup_checkpoints'
 XB_CKP_FILE = 'xtrabackup_checkpoints'
@@ -2649,11 +2649,11 @@ Valid commands are:
 
     full: Execute full backups
     incr: Execute incremental backups
+    bin: Ececute binlogs backups
     list: List existing backups and additional information
     status: Check status of last backup
-    apply-last: Prepare to the most recent backup
-    restore-set: Restore to a specific backup set
-    last-lsn: Print out to_lsn value of last backup for incremental use
+    prepare-last: Prepare to the most recent backup
+    prepare: Prepare to a specific backup set
     wipeout: Cleanup all existing backups
 
 """
@@ -2727,9 +2727,8 @@ Valid commands are:
         help=('For status command, what output format, default=none, '
             'possible values: none, nagios, zabbix (cli)'))
     parser.add_option('-r', '--restore-backup', dest='restore_backup', type="string",
-        help=('With command restore-set, specify which backup to restore, '
-            'choose any from output of list command. Default is restore to last '
-            'successful backup. (cli)'))
+        help=('With command prepare, specify which backup to prepare for restore, '
+            'choose any from output of list command.'))
     parser.add_option('-e', '--restore-dir', dest='restore_dir', type="string",
         help='With command restore, specify where to restore selected backup (cli)')
     parser.add_option('-i', '--retention-sets', dest='retention_sets',
@@ -2745,15 +2744,15 @@ Valid commands are:
             'are push to remote location. Allows the script to query information '
             'about backups stored remotely'))
     parser.add_option('-n', '--first-binlog', dest='first_binlog', type="string",
-        help=('For binlog-stream, if the script cannot determine the oldest '
+        help=('For binlogs backup, if the script cannot determine the oldest '
             'binary log filename from the backups to maintain the list of files '
             'to keep, we can specify it manually here'))
     parser.add_option('', '--binlog-from-master', dest='binlog_from_master', action="store_true",
-        help=('For binlog-stream, when --slave-info is enabled on the backups '
+        help=('For binlogs backup, when --slave-info is enabled on the backups '
             'and you want to stream binary logs from the master instead '
             'this tells the script to determine the correct binary log file name'))
     parser.add_option('-l', '--binlog-binary', dest='binlog_binary', type="string",
-        help=('For binlog-stream, specify where the 5.6+ mysqlbinlog utility '
+        help=('For binlogs backup, specify where the 5.6+ mysqlbinlog utility '
             'is located'))
     parser.add_option('-d', '--debug', dest='debug', action="store_true",
         help='Enable debugging, more verbose output (cli)',
@@ -3376,9 +3375,8 @@ class PyxOptions(object):
             "\tincr: Execute incremental backups\n"
             "\tlist: List existing backups and additional information\n"
             "\tstatus: Check status of last backup\n"
-            "\tapply-last: Prepare to the most recent backup\n"
-            "\trestore-set: Restore to a specific backup set\n"
-            "\tlast-lsn: Print out to_lsn value of last backup for incremental use\n"
+            "\tprepare-last: Prepare to the most recent backup\n"
+            "\tprepare: Prepare to a specific backup set\n"
             "\twipeout: Cleanup all existing backups\n"]
         p_epilog = p_epilog % XB_BIN_NAME
 
@@ -3450,9 +3448,8 @@ class PyxOptions(object):
             help=('For status command, what output format, default=none, '
                 'possible values: none, nagios, zabbix (cli)'))
         parser.add_option('-r', '--restore-backup', dest='restore_backup', type="string",
-            help=('With command restore-set, specify which backup to restore, '
-                'choose any from output of list command. Default is restore to last '
-                'successful backup. (cli)'))
+            help=('With command prepare, specify which backup to prepare for restore, '
+                'choose any from output of list command.'))
         parser.add_option('-e', '--restore-dir', dest='restore_dir', type="string",
             help='With command restore, specify where to restore selected backup (cli)')
         parser.add_option('-i', '--retention-sets', dest='retention_sets',
@@ -3468,15 +3465,15 @@ class PyxOptions(object):
                 'are push to remote location. Allows the script to query information '
                 'about backups stored remotely'))
         parser.add_option('-n', '--first-binlog', dest='first_binlog', type="string",
-            help=('For binlog-stream, if the script cannot determine the oldest '
+            help=('For binlogs backup, if the script cannot determine the oldest '
                 'binary log filename from the backups to maintain the list of files '
                 'to keep, we can specify it manually here'))
         parser.add_option('', '--binlog-from-master', dest='binlog_from_master', action="store_true",
-            help=('For binlog-stream, when --slave-info is enabled on the backups '
+            help=('For binlogs backup, when --slave-info is enabled on the backups '
                 'and you want to stream binary logs from the master instead '
                 'this tells the script to determine the correct binary log file name'))
         parser.add_option('-l', '--binlog-binary', dest='binlog_binary', type="string",
-            help=('For binlog-stream, specify where the 5.6+ mysqlbinlog utility '
+            help=('For binlogs backup, specify where the 5.6+ mysqlbinlog utility '
                 'is located'))
         parser.add_option('-d', '--debug', dest='debug', action="store_true",
             help='Enable debugging, more verbose output (cli)',
