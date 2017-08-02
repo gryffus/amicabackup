@@ -717,7 +717,7 @@ def _compress_tgz(bkp, tgz):
 
     return True
 
-def _extract_tgz(tgz, dest):
+def _extract_tgz(tgz, dest, meta = None):
     run_cmd = "tar xi"
     if xb_opt_compress_with == 'gzip':
         run_cmd += 'z'
@@ -750,7 +750,7 @@ def _extract_tgz(tgz, dest):
 
     return True
 
-def _extract_xgz(xgz, dest):
+def _extract_xgz(xgz, dest, meta = None):
     gz_cmd = "gzip -cd"
     #if xb_opt_debug:
     #    gz_cmd += ' -v'
