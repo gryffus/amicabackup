@@ -2134,8 +2134,8 @@ def run_status():
     elif ret == 1: txt = "WARN - %s" % txt
     else: txt = "CRITICAL - %s" % txt
 
-    if xb_opt_status_format == 'nagios': print txt
-    elif xb_opt_status_format == 'zabbix': print ret
+    if xb_opt_status_format == 'zabbix': print ret
+    else: print txt
     sys.exit(ret)
 
 def run_xb_restore_set(prepare_path=None, finalize=True):
@@ -3259,6 +3259,8 @@ if __name__ == "__main__":
 
         if xb_opt_command == XB_CMD_FULL:
             run_xb_full()
+        elif xb_opt_command == XB_CMD_STAT:
+            run_status()
         elif xb_opt_command == XB_CMD_INCR:
             run_xb_incr()
         elif xb_opt_command == XB_CMD_LIST:
