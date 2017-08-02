@@ -2323,6 +2323,7 @@ def run_binlog_stream():
     logs = []
     low = None
     high = None
+    found_binlog = None
 
     while True:
         row = cur.fetchone()
