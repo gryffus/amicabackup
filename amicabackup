@@ -1,7 +1,11 @@
 #!/usr/bin/python
 
-# pyxbackup - Robust Xtrabackup based MySQL Backups Manager
+# amicabackup - Robust Xtrabackup based MySQL Backups Manager
 #
+# this script is based on pyxbackup by Jervin Real
+# and has been modified for AMICA by Lukas Krejza
+#
+# @author Lukas Krejza <lukas.krejza@unicorn.com>
 # @author Jervin Real <jervin.real@percona.com>
 
 import sys, traceback, os, errno, signal, socket
@@ -13,7 +17,7 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from struct import unpack
 
-XB_BIN_NAME = 'pyxbackup'
+XB_BIN_NAME = 'amicabackup'
 
 xb_opt_config = None
 xb_opt_config_section = None
@@ -71,7 +75,7 @@ xb_stor_binlogs = None
 xb_curdate = None
 xb_cfg = None
 xb_cwd = None
-xb_version = 0.4
+xb_version = '5.0.1'
 xb_ibx_opts = ''
 xb_ibx_bin = 'innobackupex'
 xb_zip_bin = 'gzip'
@@ -2381,7 +2385,7 @@ def run_binlog_stream():
                 FNULL = open(os.devnull, 'w')
                 p = Popen(run_cmd, shell=True, stdout=FNULL, stderr=FNULL)
 
-            pid_file = os.path.join('/tmp', "%s-binlog-stream.pid" % XB_BIN_NAME)
+            pid_file = os.path.join('/tmp', "%s-binlog-amicabackup.pid" % XB_BIN_NAME)
             pid_file_h = open(pid_file, 'w')
             pid_file_h.write(str(p.pid))
             pid_file_h.close()
@@ -2638,7 +2642,7 @@ Options here can also be specified on a filed called %s.cnf which will be
 checked in this order:
 
 - on a file specified via the --config option
-- /etc/pyxbackup.cnf
+- /etc/amicabackup.cnf
 - on the same directory of the script 
 
 Valid commands are:
@@ -2997,13 +3001,13 @@ Valid commands are:
 
     # we test email delivery beforehand to make sure it works
     # this will happen only once as long as the sentinel file exists
-    # i.e. STOR_DIR/pyxbackup_mail_ok
+    # i.e. STOR_DIR/amicabackup_mail_ok
     mail_status_file = "%s/%s_mail_ok" % (xb_opt_stor_dir, XB_BIN_NAME)
     if (xb_opt_notify_by_email or xb_opt_notify_on_success) and \
             not os.path.isfile(mail_status_file):
         mail_message = "This is a test message from %s@%s, please ignore." % (
             xb_user, xb_hostname)
-        mail_subject = "pyxbackup Test Mail"
+        mail_subject = "amicabackup Test Mail"
         mail_to = xb_opt_notify_by_email \
             if xb_opt_notify_by_email else xb_opt_notify_on_success
 
@@ -3365,7 +3369,7 @@ class PyxOptions(object):
             "Options here can also be specified on a filed called %s.cnf \n"
             "which will be checked in this order: \n\n"
             "- on a file specified via the --config option\n"
-            "- /etc/pyxbackup.cnf\n"
+            "- /etc/amicabackup.cnf\n"
             "- on the same directory of the script \n\n"
             "Valid commands are:\n\n"
             "\tfull: Execute full backups\n"
@@ -3615,13 +3619,13 @@ class PyxOptions(object):
 
         # we test email delivery beforehand to make sure it works
         # this will happen only once as long as the sentinel file exists
-        # i.e. STOR_DIR/pyxbackup_mail_ok
+        # i.e. STOR_DIR/amicabackup_mail_ok
         mail_status_file = "%s/%s_mail_ok" % (stor_dir, XB_BIN_NAME)
         if (notify_by_email or notify_on_success) and \
                 not os.path.isfile(mail_status_file):
             mail_message = "This is a test message from %s@%s, please ignore." % (
                 xb_user, xb_hostname)
-            mail_subject = "pyxbackup Test Mail"
+            mail_subject = "amicabackup Test Mail"
             mail_to = notify_by_email \
                 if notify_by_email else notify_on_success
 
