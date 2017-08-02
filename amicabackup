@@ -2330,12 +2330,41 @@ def run_binlog_stream():
     while True:
         row = cur.fetchone()
         if row is None: break
-        logs.append(row['Log_name'])
-        if low is None: low = row['Log_name']
-        high = row['Log_name']
+        ##Find first available binlog on server
+        while not found_binlog:
+            if old_binlog != row['Log_name']:
+                if os.path.exists(xb_stor_binlogs + "/" + old_binlog):
+                    _debug("Binlog %s was not found on the server, but exists in backups. Assuming it's complete." % old_binlog)
+                    old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                else:
+                    _say("Binlog %s was not found on the server and does not exist in backups! Binlog restore from oldest backup will not work." % old_binlog)
+                    old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+            else:
+                found_binlog = True
+                break
+        ##Check if binlog size is same as on the server
+        if os.path.exists(xb_stor_binlogs + "/" + old_binlog):
+            _debug("Binlog %s does exist on the server, comparing sizes" % old_binlog)
+            if os.path.getsize(xb_stor_binlogs + "/" + old_binlog) == row['File_size']:
+                _debug("Binlog %s is already present on filesystem and size is the same. Skipping and trying next." % old_binlog)
+                old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                continue
+            else:
+                _debug("Binlog %s is already present on filesystem, but size differs. Will be backed up." % old_binlog)
+                old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                logs.append(row['Log_name'])
+                if low is None: low = row['Log_name']
+                high = row['Log_name']
+        else:
+                _debug("Binlog %s is not present on filesystem. Will be backed up." % old_binlog)
+                old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                logs.append(row['Log_name'])
+                if low is None: low = row['Log_name']
+                high = row['Log_name']
 
     db_close()
-    if xb_last_binlog is None: xb_last_binlog = old_binlog
+    old_binlog = low
+    xb_last_binlog = old_binlog
 
     _debug("old_binlog: %s, xb_last_binlog: %s, found_binlogs: %s" % (
         old_binlog, xb_last_binlog, str(logs)))
@@ -2353,7 +2382,7 @@ def run_binlog_stream():
     if xb_opt_mysql_cnf is not None:
         run_cmd_s += " --defaults-file=%s" % xb_opt_mysql_cnf
 
-    run_cmd_s += " --read-from-remote-server --raw --stop-never"
+    run_cmd_s += " --read-from-remote-server --raw"
 
     if xb_opt_mysql_user is not None:
         run_cmd_s += " --user=%s" % xb_opt_mysql_user
@@ -2376,7 +2405,7 @@ def run_binlog_stream():
 
         while True:
             FNULL = None
-            run_cmd = ("%s %s" % (run_cmd_s, xb_last_binlog))
+            run_cmd = ("%s %s" % (run_cmd_s, ' '.join(logs)))
             _debug("Running mysqlbinlog with: %s" % run_cmd)
 
             if xb_opt_debug:
@@ -2413,6 +2442,16 @@ def run_binlog_stream():
 
             if FNULL is not None:
                 FNULL.close()
+
+            if r == 0:
+                _debug("mysqlbinlog command succeeded with exit code %s" % str(r))
+                # We re-evaluate our oldest binlog to keep and purge older ones
+                list_backups()
+                old_binlog = _oldest_binlog_from_backup()
+                if not old_binlog: old_binlog = xb_first_binlog
+                _purge_binlogs_to(old_binlog)
+                _say("Hourly backup complete")
+                return True
 
             if r != 0:
                 _error("mysqlbinlog command failed with error code %s" % str(r))
