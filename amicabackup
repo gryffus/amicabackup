@@ -2686,7 +2686,7 @@ Valid commands are:
 
     full: Execute full backups
     incr: Execute incremental backups
-    bin: Ececute binlogs backups
+    bin: Execute binlogs backups
     list: List existing backups and additional information
     status: Check status of last backup
     prepare-last: Prepare to the most recent backup
