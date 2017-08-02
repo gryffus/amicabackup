@@ -25,15 +25,15 @@ xb_opt_stor_dir = ''
 xb_opt_work_dir = ''
 xb_opt_mysql_user = None
 xb_opt_mysql_pass = None
-xb_opt_mysql_host = 'localhost'
+xb_opt_mysql_host = '127.0.0.1'
 xb_opt_mysql_port = 3306
-xb_opt_mysql_sock = '/tmp/mysql.sock'
+xb_opt_mysql_sock = ''
 xb_opt_mysql_cnf = None
-xb_opt_retention_binlogs = False
-xb_opt_compress = False
+xb_opt_retention_binlogs = None
+xb_opt_compress = True
 xb_opt_compress_with = 'gzip'
 xb_opt_apply_log = False
-xb_opt_prepare_memory = 128
+xb_opt_prepare_memory = 1024
 xb_opt_retention_sets = 2
 xb_opt_retention_months = 0
 xb_opt_retention_weeks = 0
@@ -1713,16 +1713,16 @@ def run_xb():
 
     if xb_opt_compress and not xb_opt_apply_log:
         if xb_opt_compress_with == 'qpress':
-            xb_ibx_opts += ' --compress --compress-threads=4'
+            xb_ibx_opts += ' --compress --compress-threads=8'
 
-        xb_ibx_opts += ' --stream=xbstream --parallel=4'
+        xb_ibx_opts += ' --stream=xbstream --parallel=8'
         xb_ibx_opts += ' --extra-lsndir=' + xb_this_backup
         os.mkdir(xb_this_backup)
     else:
-        xb_ibx_opts += ' --parallel=4'
+        xb_ibx_opts += ' --parallel=8'
 
     if xb_opt_encrypt and not xb_opt_apply_log:
-        xb_ibx_opts += ' --encrypt=%s --encrypt-threads=4 --encrypt-key-file=%s' % (
+        xb_ibx_opts += ' --encrypt=%s --encrypt-threads=8 --encrypt-key-file=%s' % (
             xb_opt_encrypt, xb_opt_encrypt_key_file)
 
     # Check if rsync binary exists, if so let's use it for uncompressed 

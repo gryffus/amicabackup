@@ -1,0 +1,136 @@
+[amicabackup]
+
+# MySQL credentials that can be used to the instance
+# being backed up, only user and pass are used at the 
+# time of this writing
+# default if not specified: 127.0.0.1
+mysql_host = <hostname or IP address>
+mysql_user = <username>
+mysql_pass = <password>
+
+# Where to store raw (compressed) backups on the local directory
+# If --remote-push-only is specified, this is still needed but
+# they will not contain the actual backups, only meta information
+# and logs will remain to keep the backup workflow going
+stor_dir = <path to backups>
+
+# When apply-log is enabled, this is where the "prepared-full"
+# backup will be kept and also stage as temp work dir if backups
+# compression is enabled
+work_dir = <path to backups workdir>
+
+# When specified, this value will be passed as --defaults-file to
+# innobackupex
+mysql_cnf = <path to my.cnf>
+
+######################################################################
+# All settings below this line can be left on their default settings #
+# or will be autodetected from my.cnf, but can be overriden here     #
+######################################################################
+
+# default if not specified: 3306
+#mysql_port = <port of MySQL instance to connect to>
+# default if not specified: autodetected from my.cnf
+#mysql_sock = <path to MySQL socket>
+
+# Instructs the script to run prepare on a copy of the backup
+# with redo-only. The script will maintain a copy of every
+# backup inside work_dir and keep applying with redo-only
+# until the next full backup is executed
+# default if not specified: 0
+#apply_log = <0/1>
+
+# Whether to compress backups
+# default if not specified: 1
+#compress = <0/1>
+
+# What compression tool, supports gzip and qpress. Gzip is default, if not specified.
+# default if not specified: gzip
+#compress_with = <gzip/qpress>
+
+# Send backup failure notifications to these addresses, separated by comma
+# separated by comma
+#notify_by_email = <E-Mail address for notifications>
+
+# Send backup completion notifications to these adresses,
+# separated by comma
+#notify_on_success = <E-Mail address for notifications>
+
+# When streaming/copying backups to remote site
+# this is the destination. It should have the same structure as
+# stor_dir with full, incr, weekly, monthly folders within
+#remote_stor_dir = <path to backups on remote server>
+
+# Remote host to stream to
+#remote_host = <IP address of remote server to store backups>
+
+# Optional SSH options when streaming with rsync
+# "-o PasswordAuthentication=no -q" is already specified by default
+# If options contain whitespaces, please put them into quotes
+#ssh_opts = <Additional SSH options>
+
+# The SSH user to use when streaming to remote
+#ssh_user = <SSH user on remote server for storing backups>
+
+# When apply_log is enabled, this is how much memory in MB
+# will be used for --use-memory option with innobackupex
+# default if not specified: 1024
+#prepare_memory = <Amount of memory used by prepare in MB>
+
+# How many sets of full + incrementals to keep in stor
+# default if not specified: 2
+#retention_sets = <Amount backup sets to keep>
+
+# How many archived weekly backups are kept, unused for now
+#retention_weeks = <Amount weekly backups to keep>
+
+# How many archived monthly backups are kept, unused for now
+#retention_months = <Amount weekly backups to keep>
+
+# When using binary log streaming, by default, the script will maintain
+# the oldest binary log based on the oldest backup. This can be overridden 
+# by setting a customer retention period for binary logs for special
+# cases
+#retention_binlogs = <Number of days to keep binlogs>
+
+# Same functions as innobackupex --encrypt --encrypt-key-file options
+# to support for encrypted backups at rest
+#encrypt = <AES128/AES192/AES256>
+#encrypt_key_file = <Path to encryption keyfile>
+
+# innobackupex has a lot of options not covered by this wrapper
+# therefore to support additional options, you can pass additional
+# parameters to innobackupex using this option. Enclose them in single or 
+# double quotes and specify them as you would when running innobackupex
+# manually. Take into account to not conflict with options like
+# --compress, --encrypt*, --remote* as these are used in extended 
+# fashion by pyxbackup. 
+#
+# Note that anything after the equal sign is included, quotes are not 
+# stripped since innobackupex can have options that will require quotes 
+# i.e. --include=REGEXP
+# Please change this option only at your own risk!
+extra_ibx_options = --ssl-mode=DISABLED
+
+# When using Percona Server with Changed Page Tracking enabled, the
+# script can also purge the bitmaps automatically provided that it is
+# configured with valid credentials with SUPER privileges
+# purge_bitmaps = <0/1>
+
+# By default, when storing backups to a remote storage, scp/ssh streaming is
+# used. If you want to use netcat, simply specify using this option the 
+# netcat port to open on the remote server. The script will use SSH to connect
+# to the remote server and open the nc port, make sure that the SSH user
+# has the privilege to open the port i.e. try to use unprivileged port 
+# instead.
+#
+# If you have multiple backups running at the same time and storing to the 
+# same server, make sure to assign unique ports to each.
+#remote_nc_port=<Port number for backups transfering via netcat>
+
+# When pushing backups to remote Linux servers, you can specify
+# the path to the pyxbackup script on the remote server and 
+# other config/options
+# file if they are not in default locations ($PATH and /etc/pyxbackup.cnf)
+#remote_script=<Path to amicabackup script and its configuration file on remote server >
+
