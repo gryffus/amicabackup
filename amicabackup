@@ -2367,6 +2367,17 @@ def run_binlog_stream():
                 high = row['Log_name']
 
     db_close()
+
+    if not logs:
+        _say("All binlogs are already archived. Nothing to do.")
+        # We re-evaluate our oldest binlog to keep and purge older ones
+        list_backups()
+        old_binlog = _oldest_binlog_from_backup()
+        if not old_binlog: old_binlog = xb_first_binlog
+        _purge_binlogs_to(old_binlog)
+        _say("Hourly backup complete")
+        return True
+
     old_binlog = low
     xb_last_binlog = old_binlog
 
