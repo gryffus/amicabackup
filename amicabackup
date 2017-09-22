@@ -2330,16 +2330,22 @@ def run_binlog_stream():
         if row is None: break
         ##Find first available binlog on server
         while not found_binlog:
-            if old_binlog != row['Log_name']:
-                if os.path.exists(xb_stor_binlogs + "/" + old_binlog):
-                    _debug("Binlog %s was not found on the server, but exists in backups. Assuming it's complete." % old_binlog)
-                    old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
-                else:
-                    _say("Binlog %s was not found on the server and does not exist in backups! Binlog restore from oldest backup will not work." % old_binlog)
-                    old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+            if int(old_binlog[-6:]) > int(row['Log_name'][-6:]):
+                #This binlog on the server is older than we need, skip to the next one
+                _debug("Binlog %s is older than we need, skipping." % row['Log_name'])
+                row = cur.fetchone()
             else:
-                found_binlog = True
-                break
+                #There is not enough binlogs on the server, we must skip some
+                if old_binlog != row['Log_name']:
+                    if os.path.exists(xb_stor_binlogs + "/" + old_binlog):
+                        _debug("Binlog %s was not found on the server, but exists in backups. Assuming it's complete." % old_binlog)
+                        old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                    else:
+                        _say("Binlog %s was not found on the server and does not exist in backups! Binlog restore from oldest backup will not work." % old_binlog)
+                        old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
+                else:
+                    found_binlog = True
+                    break
         ##Check if binlog size is same as on the server
         if os.path.exists(xb_stor_binlogs + "/" + old_binlog):
             _debug("Binlog %s does exist on the server, comparing sizes" % old_binlog)
@@ -2348,7 +2354,7 @@ def run_binlog_stream():
                 old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
                 continue
             else:
-                _debug("Binlog %s is already present on filesystem, but size differs. Will be backed up." % old_binlog)
+                _debug("Binlog %s is already present on filesystem, but size differ. Will be backed up." % old_binlog)
                 old_binlog = row['Log_name'][:-6] + str(int(old_binlog[-6:])+1).zfill(6)
                 logs.append(row['Log_name'])
                 if low is None: low = row['Log_name']
